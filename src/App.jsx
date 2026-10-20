@@ -11,6 +11,7 @@ import ParticleColorModal from "./components/ParticleColorModal";
 import { initialPlaylist } from "./data/playlistData";
 import { defaultLyrics, defaultSongInfo } from "./data/lyricsData";
 import { synthEngine } from "./utils/audioEngine";
+import { fetchSongs, createSongApi, updateSongLyricsApi, deleteSongApi } from "./utils/api";
 
 export default function App() {
   // Playlist State (disimpan di localStorage agar lagu baru yang ditambahkan user tidak hilang)
@@ -65,6 +66,9 @@ export default function App() {
   const [isTextboardOpen, setIsTextboardOpen] = useState(false);
   const [isParticleColorModalOpen, setIsParticleColorModalOpen] = useState(false);
 
+  // 3D Stage Presentation Mode ("split" | "lyrics" | "vinyl")
+  const [stageMode, setStageMode] = useState("split");
+
   // Refs for high-precision time tracking
   const audioRef = useRef(null);
   const animationFrameRef = useRef(null);
@@ -78,7 +82,31 @@ export default function App() {
     return songInfo.duration || 216;
   }, [songInfo.duration]);
 
-  // Simpan playlist ke localStorage saat ada lagu baru
+  // Muat daftar lagu dari database SQLite saat aplikasi dimulai
+  useEffect(() => {
+    let isMounted = true;
+    async function loadSongsFromDb() {
+      try {
+        const dbSongs = await fetchSongs();
+        if (isMounted && Array.isArray(dbSongs) && dbSongs.length > 0) {
+          setPlaylist(dbSongs);
+          const found = dbSongs.find((s) => s.id === currentSongId);
+          if (found) {
+            setSongInfo(found);
+            setLyrics(found.lyrics || []);
+          }
+        }
+      } catch (err) {
+        console.warn("Database SQLite lokal belum aktif atau offline, menggunakan data lokal:", err);
+      }
+    }
+    loadSongsFromDb();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Simpan playlist ke localStorage saat ada perubahan
   useEffect(() => {
     try {
       localStorage.setItem("kinetic_lyrics_playlist", JSON.stringify(playlist));
@@ -272,19 +300,51 @@ export default function App() {
     handleSelectSong(playlist[prevIndex]);
   };
 
-  // Add new song to playlist
-  const handleAddNewSong = (newSong) => {
-    setPlaylist((prev) => [newSong, ...prev]);
-    handleSelectSong(newSong);
-    setIsPlaying(true);
+  // Add new song to playlist (simpan permanen ke database SQLite & folder uploads)
+  const handleAddNewSong = async (newSongData) => {
+    try {
+      let createdSong;
+      // Jika sudah memiliki format lengkap dari backend SQLite
+      if (newSongData.id && !newSongData.audioFile && newSongData.audioSrc && !newSongData.audioSrc.startsWith("blob:")) {
+        createdSong = newSongData;
+      } else {
+        // Simpan file audio fisik & metadata ke SQLite backend
+        createdSong = await createSongApi(newSongData);
+      }
+      setPlaylist((prev) => [createdSong, ...prev.filter((s) => s.id !== createdSong.id)]);
+      handleSelectSong(createdSong);
+      setIsPlaying(true);
+      return createdSong;
+    } catch (err) {
+      console.warn("Gagal menyimpan ke backend SQLite, menggunakan fallback lokal:", err);
+      const fallback = {
+        id: "song-" + Date.now(),
+        ...newSongData,
+        audioSrc: newSongData.audioFile
+          ? URL.createObjectURL(newSongData.audioFile)
+          : (newSongData.audioSrc || "/audio/Manusia(Sumarah).mp3"),
+      };
+      setPlaylist((prev) => [fallback, ...prev]);
+      handleSelectSong(fallback);
+      setIsPlaying(true);
+      return fallback;
+    }
   };
 
-  // Delete custom song
-  const handleDeleteSong = (songId) => {
-    setPlaylist((prev) => prev.filter((s) => s.id !== songId));
-    if (currentSongId === songId) {
-      handleSelectSong(playlist[0]);
+  // Delete custom song from playlist and SQLite database
+  const handleDeleteSong = async (songId) => {
+    try {
+      await deleteSongApi(songId);
+    } catch (err) {
+      console.warn("Gagal menghapus lagu dari database SQLite:", err);
     }
+    setPlaylist((prev) => {
+      const remaining = prev.filter((s) => s.id !== songId);
+      if (currentSongId === songId && remaining.length > 0) {
+        handleSelectSong(remaining[0]);
+      }
+      return remaining;
+    });
   };
 
   // Volume & Mute handlers
@@ -318,8 +378,8 @@ export default function App() {
     setLyrics(newLyrics);
   };
 
-  // Terapkan hasil parsing Textboard LRC ke lagu target
-  const handleApplyLyricsToSong = (targetSongId, parsedLyrics, rawLrc) => {
+  // Terapkan hasil parsing Textboard LRC ke lagu target dan simpan ke database SQLite
+  const handleApplyLyricsToSong = async (targetSongId, parsedLyrics, rawLrc) => {
     setPlaylist((prevPlaylist) => {
       const updated = prevPlaylist.map((song) => {
         if (song.id === targetSongId) {
@@ -331,11 +391,6 @@ export default function App() {
         }
         return song;
       });
-      try {
-        localStorage.setItem("kinetic_lyrics_playlist", JSON.stringify(updated));
-      } catch (e) {
-        console.warn("Gagal menyimpan ke localStorage:", e);
-      }
       return updated;
     });
 
@@ -350,6 +405,12 @@ export default function App() {
           rawLrc: rawLrc,
         });
       }
+    }
+
+    try {
+      await updateSongLyricsApi(targetSongId, parsedLyrics, rawLrc);
+    } catch (err) {
+      console.warn("Gagal memperbarui lirik di SQLite:", err);
     }
   };
 
@@ -393,6 +454,12 @@ export default function App() {
         handleSeek(currentTime - 5);
       } else if (e.code === "KeyM") {
         handleToggleMute();
+      } else if (e.code === "KeyV") {
+        setStageMode((prev) => {
+          if (prev === "split") return "lyrics";
+          if (prev === "lyrics") return "vinyl";
+          return "split";
+        });
       }
     };
 
@@ -433,6 +500,8 @@ export default function App() {
         songInfo={songInfo}
         isPlaying={isPlaying}
         currentLyric={currentLyric}
+        stageMode={stageMode}
+        onSelectStageMode={setStageMode}
         onSelectPresetEffect={handleSelectPresetEffect}
         onOpenLyricsList={() => setIsLyricsListOpen(true)}
         onOpenTimestampMaker={() => setIsTimestampMakerOpen(true)}
@@ -444,16 +513,21 @@ export default function App() {
         onOpenParticleColorPicker={() => setIsParticleColorModalOpen(true)}
       />
 
-      {/* Main Kinetic Typography Lyric Stage — Elevated for clear visibility */}
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center pb-28 sm:pb-36 -translate-y-6 sm:-translate-y-12 transition-transform duration-500">
+      {/* Main Kinetic Typography Lyric Stage with 3D Vinyl Turntable Support */}
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center pb-28 sm:pb-36 transition-all duration-500">
         <LyricStage
           currentLyric={currentLyric}
           previousLyric={previousLyric}
           nextLyric={nextLyric}
           isPlaying={isPlaying}
+          songInfo={songInfo}
+          onPlayPause={handlePlayPause}
+          currentTime={currentTime}
+          duration={duration}
           particleTheme={particleTheme}
           customColor={customParticleColor}
           onOpenParticleColorPicker={() => setIsParticleColorModalOpen(true)}
+          stageMode={stageMode}
         />
       </main>
 

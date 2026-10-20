@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { getParticleTiers, getParticlePrimaryColor } from "../data/particleColors";
 
 /**
- * Komponen Typography Partikel Atom Sinematik — Versi Ultra-HD / High-Bitrate.
+ * Komponen Typography Partikel Atom Sinematik : Versi Ultra-HD / High-Bitrate.
  * - Menggunakan Canvas DPR Scaling (Hi-DPI / Retina Display Support) hingga 3x native resolution.
  * - Kerapatan partikel ultra-padat (step sampling 2.1px - 2.4px) sehingga teks terlihat tajam, solid, dan tidak burik di mobile maupun desktop.
  * - Mendukung kustomisasi warna partikel (Preset Warna & Custom Color Picker) dengan transisi warna halus real-time.
@@ -125,7 +125,7 @@ export default function ParticleTypography({
       });
 
       // Sample data pixel dengan step sangat rapat (Ultra-Dense)
-      // Mobile: 2.1px, Desktop: 2.4px — menghasilkan ribuan partikel rapat bebas burik
+      // Mobile: 2.1px, Desktop: 2.4px : menghasilkan ribuan partikel rapat bebas burik
       const imgData = offCtx.getImageData(0, 0, displayWidth, displayHeight);
       const data = imgData.data;
       const points = [];
@@ -185,7 +185,7 @@ export default function ParticleTypography({
         });
       }
 
-      // Perbarui posisi target setiap partikel tanpa goyangan
+      // Perbarui posisi target setiap partikel secara dinamis dan responsif
       for (let i = 0; i < currentParticles.length; i++) {
         const p = currentParticles[i];
         if (i < points.length) {
@@ -193,20 +193,18 @@ export default function ParticleTypography({
           p.targetY = points[i].y;
           p.radius = points[i].radius;
           p.isText = true;
-          p.targetAlpha = 0.90 * points[i].alphaRatio;
+          p.targetAlpha = 0.92 * points[i].alphaRatio;
 
-          // Transisi vertikal halus saat lirik berganti
-          if (Math.abs(p.y - points[i].y) > 80) {
-            p.y = points[i].y + (i % 2 === 0 ? 28 : -28);
-            p.alpha = 0.15;
-          }
+          // Responsif meluncur langsung ke target lirik berikutnya tanpa reset alpha atau teleportasi
+          p.speed = 0.092 + Math.random() * 0.035;
         } else {
-          // Partikel cadangan mengambang sangat tenang di latar belakang
+          // Partikel cadangan mengambang tenang di latar belakang
           p.targetX = displayWidth / 2 + (Math.random() - 0.5) * (displayWidth * 0.8);
           p.targetY = Math.random() < 0.5 ? Math.random() * 30 : displayHeight - Math.random() * 30;
           p.isText = false;
           p.targetAlpha = 0.12;
           p.radius = 0.8;
+          p.speed = 0.05 + Math.random() * 0.02;
         }
       }
     };
@@ -332,7 +330,10 @@ export default function ParticleTypography({
 
       {/* Subtext dengan font tajam & halus */}
       {subtext && (
-        <p className="mt-1 text-xs sm:text-sm font-sans font-normal tracking-wide text-slate-300/85 max-w-xl text-center px-4 transition-all duration-700 animate-fade-in drop-shadow-sm">
+        <p
+          key={subtext}
+          className="mt-1 text-xs sm:text-sm font-sans font-normal tracking-wide text-slate-300/85 max-w-xl text-center px-4 transition-all duration-500 animate-fade-in drop-shadow-sm"
+        >
           {subtext}
         </p>
       )}

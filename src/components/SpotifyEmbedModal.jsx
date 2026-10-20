@@ -81,7 +81,7 @@ export default function SpotifyEmbedModal({
     const finalEmbedUrl = spotifyMeta?.embedUrl || buildSpotifyEmbedUrl(trackId);
 
     const initialLyrics = parseLRC(
-      `[00:01.00] ${title} — ${artist}\n[00:07.00] Memutar dari Spotify Embed\n[00:15.00] Buka menu Textboard LRC untuk menempelkan lirik lagu lengkap`
+      `[00:01.00] ${title} : ${artist}\n[00:07.00] Memutar dari Spotify Embed\n[00:15.00] Buka menu Textboard LRC untuk menempelkan lirik lagu lengkap`
     );
 
     const newSong = {
@@ -138,7 +138,7 @@ export default function SpotifyEmbedModal({
                 Spotify Embed Player
               </h3>
               <p className="text-[11px] text-[#1DB954] font-mono truncate">
-                {songInfo?.artist ? `${songInfo.artist} — ${songInfo.title}` : "Barasuara — Manusia (Sumarah)"}
+                {songInfo?.artist ? `${songInfo.artist} : ${songInfo.title}` : "Barasuara : Manusia (Sumarah)"}
               </p>
             </div>
           </div>

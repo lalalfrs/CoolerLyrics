@@ -10,7 +10,6 @@ import {
   Volume1,
   Layers,
   Library,
-  Music,
 } from "lucide-react";
 
 const formatTime = (seconds = 0) => {
@@ -64,13 +63,23 @@ export default function PlayerControls({
       <div className="pointer-events-auto w-full max-w-3xl glass-panel rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-2xl backdrop-blur-2xl border border-white/10 transition-all duration-300">
         
         {/* Sleek Interactive Seekbar */}
-        <div className="relative mb-2.5 sm:mb-3 group">
+        <div className="relative mb-2.5 sm:mb-3 group py-1">
           <div
             ref={progressRef}
             onClick={handleProgressBarClick}
             onMouseMove={handleProgressBarMouseMove}
             onMouseLeave={() => setHoverTime(null)}
             className="w-full h-2 sm:h-2.5 rounded-full bg-white/10 hover:bg-white/20 cursor-pointer relative overflow-hidden transition-all duration-150"
+            role="slider"
+            aria-label="Progress bar lagu"
+            aria-valuemin={0}
+            aria-valuemax={duration}
+            aria-valuenow={currentTime}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowRight") onSeek(Math.min(duration, currentTime + 5));
+              if (e.key === "ArrowLeft") onSeek(Math.max(0, currentTime - 5));
+            }}
           >
             {/* Progress Fill with Smooth Ambient Glow */}
             <div
@@ -92,25 +101,16 @@ export default function PlayerControls({
           )}
         </div>
 
-        {/* Bottom Playback Row: Minimalist, Balanced, & Non-Crowded */}
+        {/* Bottom Playback Row: Minimalist, Balanced, and Non-Crowded */}
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           
-          {/* Left: Time & Song Preview */}
+          {/* Left: Time and Song Preview */}
           <div className="flex items-center gap-2 min-w-0 w-28 sm:w-44">
             <div className="font-mono text-xs sm:text-sm text-slate-300 flex items-center gap-1">
               <span className="text-white font-bold">{formatTime(currentTime)}</span>
               <span className="text-slate-500">/</span>
               <span className="text-slate-400">{formatTime(duration)}</span>
             </div>
-
-            {/* Bouncing Audio Visualizer */}
-            {isPlaying && !isMuted && (
-              <div className="hidden md:flex items-end gap-0.5 h-3 px-1 bg-emerald-500/10 rounded border border-emerald-500/20">
-                <span className="w-0.5 bg-emerald-400 animate-pulse h-full rounded" style={{ animationDuration: '0.4s' }} />
-                <span className="w-0.5 bg-emerald-400 animate-pulse h-2/3 rounded" style={{ animationDuration: '0.6s' }} />
-                <span className="w-0.5 bg-emerald-400 animate-pulse h-4/5 rounded" style={{ animationDuration: '0.5s' }} />
-              </div>
-            )}
           </div>
 
           {/* Center: Playback Controls (Prev, Big Play/Pause, Next) */}
@@ -118,37 +118,40 @@ export default function PlayerControls({
             <button
               type="button"
               onClick={onPrevTrack || onRestart}
-              className="p-1.5 sm:p-2 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors active:scale-95"
-              title="Putar Ulang / Lagu Sebelumnya"
+              className="p-2 sm:p-2.5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors active:scale-95 focus-visible:ring-2 focus-visible:ring-indigo-400 outline-none"
+              title="Putar Ulang atau Lagu Sebelumnya"
+              aria-label="Lagu sebelumnya"
             >
               <SkipBack className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
             </button>
 
-            {/* Central Big Play / Pause Button */}
+            {/* Central Big Play / Pause Button with Spring Bounce */}
             <button
               type="button"
               onClick={onPlayPause}
-              className="p-2.5 sm:p-3.5 rounded-full bg-white text-black hover:bg-slate-100 hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,255,255,0.35)]"
+              className="p-3 sm:p-3.5 rounded-full bg-white text-black hover:bg-slate-100 hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,255,255,0.35)] focus-visible:ring-2 focus-visible:ring-indigo-400 outline-none"
               title={isPlaying ? "Jeda (Pause)" : "Mulai (Play Musik)"}
+              aria-label={isPlaying ? "Jeda lagu" : "Putar lagu"}
             >
               {isPlaying ? (
-                <Pause className="w-5 h-5 sm:w-5 sm:h-5 fill-black" />
+                <Pause className="w-5 h-5 fill-black" />
               ) : (
-                <Play className="w-5 h-5 sm:w-5 sm:h-5 fill-black translate-x-0.5" />
+                <Play className="w-5 h-5 fill-black translate-x-0.5" />
               )}
             </button>
 
             <button
               type="button"
               onClick={onNextTrack || onRestart}
-              className="p-1.5 sm:p-2 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors active:scale-95"
+              className="p-2 sm:p-2.5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors active:scale-95 focus-visible:ring-2 focus-visible:ring-indigo-400 outline-none"
               title="Lagu Berikutnya"
+              aria-label="Lagu berikutnya"
             >
               <SkipForward className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
             </button>
           </div>
 
-          {/* Right: Volume & Quick Sheet Toggles */}
+          {/* Right: Volume and Quick Sheets */}
           <div className="flex items-center justify-end gap-1 sm:gap-2 w-28 sm:w-44">
             {/* Volume Control */}
             <div
@@ -159,8 +162,9 @@ export default function PlayerControls({
               <button
                 type="button"
                 onClick={onToggleMute}
-                className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
-                title={isMuted ? "Unmute" : "Mute"}
+                className="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-indigo-400 outline-none"
+                title={isMuted ? "Bunyikan (Unmute)" : "Senyapkan (Mute)"}
+                aria-label={isMuted ? "Bunyikan" : "Senyapkan"}
               >
                 {isMuted || volume === 0 ? (
                   <VolumeX className="w-4 h-4 text-red-400" />
@@ -173,7 +177,7 @@ export default function PlayerControls({
 
               {/* Volume Slider Popover */}
               {showVolumeSlider && (
-                <div className="absolute right-0 bottom-8 p-2 rounded-xl bg-slate-900 border border-white/20 shadow-xl flex items-center gap-2 z-30 animate-fade-in">
+                <div className="absolute right-0 bottom-10 p-2.5 rounded-xl bg-slate-900 border border-white/20 shadow-xl flex items-center gap-2 z-30 animate-fade-in">
                   <input
                     type="range"
                     min="0"
@@ -181,6 +185,7 @@ export default function PlayerControls({
                     step="0.05"
                     value={isMuted ? 0 : volume}
                     onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
+                    aria-label="Volume suara"
                     className="w-20 accent-indigo-500 cursor-pointer h-1.5 rounded bg-white/20"
                   />
                   <span className="font-mono text-[10px] text-slate-300 w-6">
@@ -195,8 +200,9 @@ export default function PlayerControls({
               <button
                 type="button"
                 onClick={onOpenSpotifyEmbed}
-                className="p-1.5 rounded-lg text-[#1DB954] hover:bg-[#1DB954]/20 transition-all hover:scale-105 active:scale-95"
+                className="p-2 rounded-xl text-[#1DB954] hover:bg-[#1DB954]/20 transition-all hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-[#1DB954] outline-none"
                 title="Buka Pemutar Spotify Embed"
+                aria-label="Buka widget Spotify"
               >
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                   <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.495 17.299c-.216.353-.674.464-1.026.249-2.812-1.718-6.352-2.107-10.522-1.155-.403.092-.806-.157-.898-.559-.092-.403.158-.806.56-.898 4.567-1.043 8.487-.604 11.637 1.337.352.215.464.673.249 1.026zm1.468-3.262c-.272.441-.853.582-1.294.31-3.218-1.979-8.125-2.55-11.93-1.395-.499.151-1.031-.132-1.182-.631-.151-.499.132-1.031.631-1.182 4.352-1.321 9.771-.683 13.465 1.587.441.272.582.853.31 1.311zm.126-3.413c-3.858-2.291-10.222-2.502-13.887-1.39-.593.18-1.226-.154-1.406-.747-.18-.593.154-1.226.747-1.406 4.215-1.28 11.238-1.036 15.653 1.586.533.316.708 1.009.392 1.542-.316.533-1.009.708-1.542.392z" />
@@ -208,8 +214,9 @@ export default function PlayerControls({
             <button
               type="button"
               onClick={onOpenLyricsList}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-indigo-400 outline-none"
               title="Lihat Daftar Lirik"
+              aria-label="Lihat daftar lirik"
             >
               <Layers className="w-4 h-4" />
             </button>
@@ -218,8 +225,9 @@ export default function PlayerControls({
             <button
               type="button"
               onClick={onOpenSongLibrary}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-              title="Koleksi Lagu & Tambah Musik"
+              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-indigo-400 outline-none"
+              title="Koleksi Lagu dan Tambah Musik"
+              aria-label="Buka koleksi lagu"
             >
               <Library className="w-4 h-4 text-indigo-400" />
             </button>

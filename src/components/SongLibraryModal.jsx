@@ -60,6 +60,7 @@ export default function SongLibraryModal({
 
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fileInputRef = useRef(null);
   const spotifyFileInputRef = useRef(null);
@@ -98,8 +99,8 @@ export default function SongLibraryModal({
     );
   };
 
-  // 1. Simpan Lagu Manual / File Audio
-  const handleSaveSong = (e) => {
+  // 1. Simpan Lagu Manual / File Audio Permanen ke SQLite
+  const handleSaveSong = async (e) => {
     e.preventDefault();
     setErrorMsg("");
     setSuccessMsg("");
@@ -120,34 +121,38 @@ export default function SongLibraryModal({
       return;
     }
 
-    const audioSrc = audioFile ? URL.createObjectURL(audioFile) : "/audio/Manusia(Sumarah).mp3";
+    setIsSubmitting(true);
+    try {
+      await onAddNewSong({
+        title: title.trim(),
+        artist: artist.trim() || "Artis Pilihan",
+        album: album.trim() || "Single",
+        duration: Math.ceil(parsedLyrics[parsedLyrics.length - 1].time + 6),
+        coverArt: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&auto=format&fit=crop&q=80",
+        audioFile: audioFile,
+        audioSrc: audioFile ? undefined : "/audio/Manusia(Sumarah).mp3",
+        lyrics: parsedLyrics,
+        rawLrc: lrcContent,
+        isCustom: true,
+      });
 
-    const newSong = {
-      id: "song-" + Date.now(),
-      title: title.trim(),
-      artist: artist.trim() || "Artis Pilihan",
-      album: album.trim() || "Single",
-      duration: Math.ceil(parsedLyrics[parsedLyrics.length - 1].time + 6),
-      coverArt: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&auto=format&fit=crop&q=80",
-      audioSrc: audioSrc,
-      lyrics: parsedLyrics,
-      rawLrc: lrcContent,
-      isCustom: true,
-    };
+      setSuccessMsg("Lagu berhasil disimpan ke database SQLite dan dimuat!");
 
-    onAddNewSong(newSong);
-    setSuccessMsg("Lagu berhasil ditambahkan dan dimuat!");
-
-    setTimeout(() => {
-      setActiveTab("library");
-      setTitle("");
-      setArtist("");
-      setAlbum("");
-      setLrcContent("");
-      setAudioFile(null);
-      setAudioFileName("");
-      setSuccessMsg("");
-    }, 800);
+      setTimeout(() => {
+        setActiveTab("library");
+        setTitle("");
+        setArtist("");
+        setAlbum("");
+        setLrcContent("");
+        setAudioFile(null);
+        setAudioFileName("");
+        setSuccessMsg("");
+      }, 700);
+    } catch (err) {
+      setErrorMsg(err.message || "Gagal menyimpan lagu ke database SQLite.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // 2. Deteksi Metadata Spotify via oEmbed
@@ -193,8 +198,8 @@ export default function SongLibraryModal({
     }
   };
 
-  // 3. Simpan Lagu dari Spotify Embed
-  const handleSaveSpotifySong = (e) => {
+  // 3. Simpan Lagu dari Spotify Embed ke SQLite
+  const handleSaveSpotifySong = async (e) => {
     e.preventDefault();
     setErrorMsg("");
     setSuccessMsg("");
@@ -210,43 +215,45 @@ export default function SongLibraryModal({
     const finalCover = spotifyMeta?.coverArt || "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300";
     const finalEmbedUrl = spotifyMeta?.embedUrl || buildSpotifyEmbedUrl(trackId);
 
-    const lrcToParse = spotifyLrcContent.trim() || `[00:01.00] ${finalTitle} — ${finalArtist}`;
+    const lrcToParse = spotifyLrcContent.trim() || `[00:01.00] ${finalTitle} : ${finalArtist}`;
     const parsedLyrics = parseLRC(lrcToParse, spotifyDefaultEffect);
 
-    const audioSrc = spotifyAudioFile
-      ? URL.createObjectURL(spotifyAudioFile)
-      : "/audio/Manusia(Sumarah).mp3";
+    setIsSubmitting(true);
+    try {
+      await onAddNewSong({
+        title: finalTitle,
+        artist: finalArtist,
+        album: "Spotify Embed",
+        duration: Math.ceil(parsedLyrics[parsedLyrics.length - 1].time + 10) || 216,
+        coverArt: finalCover,
+        spotifyTrackId: trackId,
+        spotifyEmbedUrl: finalEmbedUrl,
+        audioFile: spotifyAudioFile,
+        audioSrc: spotifyAudioFile ? undefined : "/audio/Manusia(Sumarah).mp3",
+        lyrics: parsedLyrics,
+        rawLrc: spotifyLrcContent,
+        isSpotify: true,
+        isCustom: true,
+      });
 
-    const newSong = {
-      id: "spotify-" + trackId + "-" + Date.now(),
-      title: finalTitle,
-      artist: finalArtist,
-      album: "Spotify Embed",
-      duration: Math.ceil(parsedLyrics[parsedLyrics.length - 1].time + 10) || 216,
-      coverArt: finalCover,
-      spotifyTrackId: trackId,
-      spotifyEmbedUrl: finalEmbedUrl,
-      audioSrc: audioSrc,
-      lyrics: parsedLyrics,
-      rawLrc: spotifyLrcContent,
-      isSpotify: true,
-      isCustom: true,
-    };
+      setSuccessMsg(`Lagu Spotify "${finalTitle}" berhasil disimpan ke database SQLite!`);
 
-    onAddNewSong(newSong);
-    setSuccessMsg(`Lagu Spotify "${finalTitle}" berhasil ditambahkan ke daftar putar!`);
-
-    setTimeout(() => {
-      setActiveTab("library");
-      setSpotifyInput("");
-      setSpotifyMeta(null);
-      setSpotifyTitle("");
-      setSpotifyArtist("");
-      setSpotifyLrcContent("");
-      setSpotifyAudioFile(null);
-      setSpotifyAudioFileName("");
-      setSuccessMsg("");
-    }, 800);
+      setTimeout(() => {
+        setActiveTab("library");
+        setSpotifyInput("");
+        setSpotifyMeta(null);
+        setSpotifyTitle("");
+        setSpotifyArtist("");
+        setSpotifyLrcContent("");
+        setSpotifyAudioFile(null);
+        setSpotifyAudioFileName("");
+        setSuccessMsg("");
+      }, 700);
+    } catch (err) {
+      setErrorMsg(err.message || "Gagal menyimpan lagu Spotify ke database SQLite.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -370,6 +377,11 @@ export default function SongLibraryModal({
                               <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.495 17.299c-.216.353-.674.464-1.026.249-2.812-1.718-6.352-2.107-10.522-1.155-.403.092-.806-.157-.898-.559-.092-.403.158-.806.56-.898 4.567-1.043 8.487-.604 11.637 1.337.352.215.464.673.249 1.026zm1.468-3.262c-.272.441-.853.582-1.294.31-3.218-1.979-8.125-2.55-11.93-1.395-.499.151-1.031-.132-1.182-.631-.151-.499.132-1.031.631-1.182 4.352-1.321 9.771-.683 13.465 1.587.441.272.582.853.31 1.311zm.126-3.413c-3.858-2.291-10.222-2.502-13.887-1.39-.593.18-1.226-.154-1.406-.747-.18-.593.154-1.226.747-1.406 4.215-1.28 11.238-1.036 15.653 1.586.533.316.708 1.009.392 1.542-.316.533-1.009.708-1.542.392z" />
                             </svg>
                             <span>Spotify</span>
+                          </span>
+                        )}
+                        {song.audioSrc?.startsWith("/uploads/") && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                            <span>MP3 SQLite</span>
                           </span>
                         )}
                       </div>
@@ -650,10 +662,22 @@ export default function SongLibraryModal({
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-[#1DB954] via-emerald-500 to-teal-500 hover:from-[#1ed760] hover:to-teal-400 text-black font-extrabold text-xs sm:text-sm shadow-lg shadow-[#1DB954]/25 transition-all active:scale-[0.99] flex items-center justify-center gap-2"
+              disabled={isSubmitting}
+              className={`w-full py-3 rounded-xl bg-gradient-to-r from-[#1DB954] via-emerald-500 to-teal-500 hover:from-[#1ed760] hover:to-teal-400 text-black font-extrabold text-xs sm:text-sm shadow-lg shadow-[#1DB954]/25 transition-all active:scale-[0.99] flex items-center justify-center gap-2 ${
+                isSubmitting ? "opacity-75 cursor-not-allowed" : ""
+              }`}
             >
-              <Play className="w-4 h-4 fill-black" />
-              <span>Simpan Lagu Spotify & Putar Sekarang</span>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-black" />
+                  <span>Menyimpan ke SQLite Database...</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4 fill-black" />
+                  <span>Simpan Lagu Spotify & Putar Sekarang</span>
+                </>
+              )}
             </button>
           </form>
         )}
@@ -773,9 +797,19 @@ export default function SongLibraryModal({
 
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-indigo-600/30 transition-all active:scale-[0.99]"
+              disabled={isSubmitting}
+              className={`w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-indigo-600/30 transition-all active:scale-[0.99] flex items-center justify-center gap-2 ${
+                isSubmitting ? "opacity-75 cursor-not-allowed" : ""
+              }`}
             >
-              Simpan & Putar Lagu Ini Sekarang
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  <span>Mengunggah & Menyimpan ke SQLite...</span>
+                </>
+              ) : (
+                <span>Simpan & Putar Lagu Ini Sekarang</span>
+              )}
             </button>
           </form>
         )}

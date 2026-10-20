@@ -1,4 +1,4 @@
-import { defaultLyrics, defaultSongInfo } from "./lyricsData";
+import { defaultLyrics, defaultSongInfo } from "./lyricsData.js";
 
 export const hitamDanBiruLrcText = `[00:23.10] Di batas petang aku akan datang
 [00:30.84] Bawa berita kurang menyenangkan
@@ -26,7 +26,7 @@ export const hitamDanBiruLrcText = `[00:23.10] Di batas petang aku akan datang
 [03:50.82]`;
 
 export const hitamDanBiruLyrics = [
-  { id: 1, time: 0, text: "• Hitam Dan Biru •", subtext: "Barasuara — Jalaran Sadrah", effect: "cinematic-letterbox", bgGradient: "from-slate-950 via-zinc-950 to-black", fontStyle: "font-serif italic text-slate-300" },
+  { id: 1, time: 0, text: "• Hitam Dan Biru •", subtext: "Barasuara : Jalaran Sadrah", effect: "cinematic-letterbox", bgGradient: "from-slate-950 via-zinc-950 to-black", fontStyle: "font-serif italic text-slate-300" },
   { id: 2, time: 23.1, text: "Di batas petang aku akan datang", subtext: "Menyambut senja yang kian redup", effect: "atomic-particles", bgGradient: "from-blue-950 via-slate-950 to-black", fontStyle: "font-sans font-bold text-slate-200" },
   { id: 3, time: 30.84, text: "Bawa berita kurang menyenangkan", subtext: "Kebenaran pahit yang tak terelakkan", effect: "atomic-particles", bgGradient: "from-slate-950 via-neutral-900 to-black", fontStyle: "font-sans font-bold text-slate-200" },
   { id: 4, time: 38.45, text: "Tentang hidupku tentang hidupmu", subtext: "Kisah yang terjalin dalam keraguan", effect: "atomic-particles", bgGradient: "from-indigo-950 via-slate-950 to-black", fontStyle: "font-sans font-bold text-slate-200" },
@@ -50,7 +50,7 @@ export const hitamDanBiruLyrics = [
   { id: 22, time: 215.12, text: "Coba berhenti bicara", subtext: "Biar keheningan yang menjawab semuanya", effect: "apple-blur", bgGradient: "from-slate-950 via-neutral-900 to-black", fontStyle: "font-sans font-bold text-slate-300" },
   { id: 23, time: 219.99, text: "Dan kita mulai menerima", subtext: "Sumarah... berdamai dengan semesta", effect: "wave-chars", bgGradient: "from-teal-950 via-slate-950 to-black", fontStyle: "font-display font-bold text-teal-200" },
   { id: 24, time: 226.21, text: "Tentang dunia", subtext: "Yang berputar pada garis takdirnya", effect: "cinematic-letterbox", bgGradient: "from-slate-950 via-stone-950 to-black", fontStyle: "font-serif italic tracking-widest text-slate-200" },
-  { id: 25, time: 230.82, text: "• H I T A M   D A N   B I R U •", subtext: "Barasuara — Jalaran Sadrah (2024)", effect: "cinematic-letterbox", bgGradient: "from-black via-zinc-950 to-black", fontStyle: "font-serif font-light uppercase tracking-[0.45em] text-slate-400" },
+  { id: 25, time: 230.82, text: "• H I T A M   D A N   B I R U •", subtext: "Barasuara : Jalaran Sadrah (2024)", effect: "cinematic-letterbox", bgGradient: "from-black via-zinc-950 to-black", fontStyle: "font-serif font-light uppercase tracking-[0.45em] text-slate-400" },
 ];
 
 export const initialPlaylist = [
@@ -85,7 +85,7 @@ export const initialPlaylist = [
     coverArt: "https://i.scdn.co/image/ab67616d0000b27395688e1f59ae3fc4951d41ff",
     audioSrc: "/audio/Merayakan Fana.mp3",
     lyrics: [
-      { id: 1, time: 0, text: "• Merayakan Fana •", subtext: "Barasuara — Jalaran Sadrah", effect: "cinematic-letterbox", bgGradient: "from-slate-950 via-zinc-950 to-black", fontStyle: "font-serif italic text-slate-300" },
+      { id: 1, time: 0, text: "• Merayakan Fana •", subtext: "Barasuara : Jalaran Sadrah", effect: "cinematic-letterbox", bgGradient: "from-slate-950 via-zinc-950 to-black", fontStyle: "font-serif italic text-slate-300" },
       { id: 2, time: 24, text: "Kala waktu berganti rupa", subtext: "Menatap bayang dalam cermin masa", effect: "atomic-particles", bgGradient: "from-zinc-950 via-neutral-900 to-black", fontStyle: "font-sans font-bold text-slate-200" },
       { id: 3, time: 38, text: "Kita tertawa dalam fana", subtext: "Merayakan detak nafas sementara", effect: "atomic-particles", bgGradient: "from-slate-950 via-stone-900 to-black", fontStyle: "font-sans font-bold text-slate-200" },
       { id: 4, time: 54, text: "MENARILAH SEBELUM REDUP", subtext: "Lepaskan semua beban duniawi", effect: "explosive-words", bgGradient: "from-blue-950 via-indigo-950 to-black", fontStyle: "font-display font-black uppercase text-sky-200" },
@@ -102,7 +102,7 @@ export const initialPlaylist = [
     coverArt: "https://i.scdn.co/image/ab67616d0000b27395688e1f59ae3fc4951d41ff",
     audioSrc: "/audio/Terbuang Dalam Waktu.mp3",
     lyrics: [
-      { id: 1, time: 0, text: "• Terbuang Dalam Waktu •", subtext: "Barasuara — Jalaran Sadrah", effect: "cinematic-letterbox", bgGradient: "from-slate-950 via-zinc-950 to-black", fontStyle: "font-serif italic text-slate-300" },
+      { id: 1, time: 0, text: "• Terbuang Dalam Waktu •", subtext: "Barasuara : Jalaran Sadrah", effect: "cinematic-letterbox", bgGradient: "from-slate-950 via-zinc-950 to-black", fontStyle: "font-serif italic text-slate-300" },
       { id: 2, time: 18, text: "Langkah terhenti di persimpangan", subtext: "Kenangan berhamburan seperti pasir", effect: "atomic-particles", bgGradient: "from-slate-950 via-neutral-900 to-black", fontStyle: "font-sans font-bold text-slate-200" },
       { id: 3, time: 34, text: "Waktu bergulir menelan jejak", subtext: "Membawa kita ke peraduan sunyi", effect: "atomic-particles", bgGradient: "from-neutral-950 via-stone-950 to-black", fontStyle: "font-sans font-bold text-slate-200" },
       { id: 4, time: 52, text: "KITA HILANG DALAM ARUSNYA", subtext: "Menyerah pada gravitasi masa", effect: "explosive-words", bgGradient: "from-rose-950 via-red-950 to-black", fontStyle: "font-display font-black uppercase text-rose-300" },

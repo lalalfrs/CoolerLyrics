@@ -153,7 +153,7 @@ export default function LrcTextboardModal({
             >
               {playlist.map((song) => (
                 <option key={song.id} value={song.id}>
-                  {song.title} — {song.artist} {song.spotifyTrackId ? "🟢 [Spotify]" : ""}
+                  {song.title} : {song.artist} {song.spotifyTrackId ? "🟢 [Spotify]" : ""}
                 </option>
               ))}
             </select>
